@@ -5,3 +5,4 @@ Team members:
 - Praful Sharma
 - Waltteri Jökinen
 - ALiyyu Zen-Abdwn
+- Camelia Zameni
