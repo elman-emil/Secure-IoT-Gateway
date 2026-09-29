@@ -3,6 +3,6 @@
 Team members:
 - Elman Emil- Scrum master
 - Praful Sharma
-- Waltteri Jökinen
+- Waltteri Jokinen
 - Aliyyu Zen-Abdeen
 - Camelia Zameni
