@@ -1,0 +1,45 @@
+_format_version: "3.0"
+
+services:
+  - name: dummy-backend
+    url: https://jsonplaceholder.typicode.com
+    routes:
+      - name: test-route
+        paths:
+          - /test
+    plugins:
+      # 1. Use JWT authentication via Authentik (Replaces key-auth)
+      - name: jwt
+        config:
+          key_claim_name: iss
+          claims_to_verify:
+            - exp
+
+      # 2. Keep rate limiting (Applies to the JWT consumer)
+      - name: rate-limiting
+        config:
+          minute: 10
+          policy: local
+
+consumers:
+  - username: authentik-idp
+    jwt_secrets:
+      - key: "http://localhost:9000/application/o/secure-iot-gateway/"
+        algorithm: RS256
+        rsa_public_key: |
+          -----BEGIN PUBLIC KEY-----
+          MIICIjANBgkqhkiG9w0BAQEFAAOCAg8AMIICCgKCAgEAmmYP9O4QIOTc/8vQ6aH8
+          TpTYxxCeewOe9s972wC9ZSrf5lRv1kM/59cTQJ4yT6/JOvZxjSuN9ilQSfAOh2bO
+          WHSJ2rEA5XbeOwfB0yRKZqzV3Q02IIY2J4370GYnhOGiDIiOVI2VKIms5g2fW3mo
+          Rt54nr96WMtpebn85E1LNkEn93D0CEDS1BavQfjFoWanHj0Qhhr/n8h8ojZXqMPG
+          uPXDeU1nUjNbvEYj8aZzRdELRgtyk8kkB0mywnqO1ug/dnFTLOlmXfeszVC1rks8
+          4iFGEHEpksn1FEc8jHriMUuWkXP6DFsTjDCstF+8UpAF8jhxPq3e9jiYC3EIXxAn
+          L9cMunBR5/5IZ2sI4tGPRV7nVgCrOOoUQ4HGK8Y64jMwZvpU8yeNNxFZ4vA8yekJ
+          78/VRXKZXTkEBYi7zcy7Kj2IBa7+bBPVzx0Y49piQXMPUuG7I3nx1hCYvi1vKkcJ
+          oPx+pC0fU1Fkfcj02YTUNeCjF2Q/iyhh/jLPAqfJ8vHOwpn+6OwcuOP20j896OnD
+          8MAyF8TcIi0VqPzkwCHWTQsffz+A3SlQE1sBrN3abJ+1a2AWq2Mb2Mx2Xsve5uaZ
+          qSv0UEVDAPkrwAmP4iyT3eA5JhXsaiFdBkyKWUpG1cb7ds+P6E/J1WffZHAHCCgB
+          haJ7IzslwZRSdf/iOzFkdIMCAwEAAQ==
+          -----END PUBLIC KEY-----
+
+
