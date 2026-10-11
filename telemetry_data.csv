@@ -1,0 +1,4 @@
+vehicle_name,model,battery_soc,motor_temp_c,speed_kmh,recorded_at
+Test Vehicle 1,Powertrain Prototype A,80.5,35.2,42.0,2026-10-11 12:03:48.918688
+Test Vehicle 1,Powertrain Prototype A,79.8,36.0,44.5,2026-10-11 12:03:48.918688
+Test Vehicle 1,Powertrain Prototype A,79.1,36.8,41.0,2026-10-11 12:03:48.918688
