@@ -15,7 +15,7 @@ This repository contains the current work-in-progress framework architecture and
 
 ## Architecture Overview
 
-![Framework Visualization](Secure-IoT-Gateway/Screenshot 2026-10-12 180850.png)
+![Framework Visualization](https://github.com/elman-emil/Secure-IoT-Gateway/blob/6eaa83c19f588858ca4a46be42169784be8dc4fd/Screenshot%202026-10-12%20180850.png)
 
 1. **Authentication:** The IoT Client requests an RS256-signed JWT from Authentik using a Service Account App Password.
 2. **Token Issuance:** Authentik validates credentials and issues an access token signed with its private RSA key.
