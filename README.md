@@ -15,7 +15,7 @@ This repository contains the current work-in-progress framework architecture and
 
 ## Architecture Overview
 
-![[Pasted image 20261012181643.png]]
+![Framework Visualization](Screenshot 2026-10-12 180850.png)
 
 1. **Authentication:** The IoT Client requests an RS256-signed JWT from Authentik using a Service Account App Password.
 2. **Token Issuance:** Authentik validates credentials and issues an access token signed with its private RSA key.
