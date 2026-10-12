@@ -25,7 +25,7 @@ This repository contains the current work-in-progress framework architecture and
 
 ---
 
-## Technical Stack
+## Framework Components
 
 * **API Gateway:** Kong Gateway (DB-less, declarative `kong.yml`)
 * **Identity Provider:** Authentik (Docker / Docker Compose)
