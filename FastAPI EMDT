@@ -1,0 +1,92 @@
+# EMDT FastAPI Backend
+
+## About
+
+This is the FastAPI backend for the Electric Mobility Digital Twin
+(EMDT) project.
+
+My role is to build the REST API that helps other parts of the system
+access vehicle and battery data.
+
+## My Responsibilities
+
+-   Build the API using FastAPI.
+-   Create endpoints for vehicle and battery data.
+-   Receive and validate vehicle sensor data.
+-   Connect the API to PostgreSQL.
+-   Work with Kong and Authentik for secure access.
+-   Test and document the API.
+
+## Technologies
+
+-   Python
+-   FastAPI
+-   Pydantic
+-   PostgreSQL
+-   MQTT
+-   Kong
+-   Authentik
+
+## Planned API Endpoints
+
+  Method   Endpoint                            Purpose
+  -------- ----------------------------------- -------------------------
+  GET      `/vehicles/{vehicle_id}`            Get vehicle information
+  GET      `/vehicles/{vehicle_id}/battery`    Get battery information
+  POST     `/telemetry`                        Send sensor data
+  POST     `/vehicles/{vehicle_id}/commands`   Send a vehicle command
+
+These endpoints are planned and may change during development.
+
+## How It Works
+
+1.  A simulated electric vehicle sends sensor data.
+2.  FastAPI receives and checks the data.
+3.  The data is stored in PostgreSQL.
+4.  Users request vehicle information through Kong.
+5.  Kong and Authentik help protect access to the API.
+
+## Run Locally
+
+Create a virtual environment:
+
+``` bash
+python -m venv .venv
+```
+
+Activate it in Windows PowerShell:
+
+``` powershell
+.\.venv\Scripts\Activate.ps1
+```
+
+Install FastAPI and Uvicorn:
+
+``` bash
+pip install fastapi uvicorn
+```
+
+Run the app if `main.py` contains the FastAPI application:
+
+``` bash
+uvicorn main:app --reload
+```
+
+Open the API documentation:
+
+`http://127.0.0.1:8000/docs`
+
+## Project Status
+
+This is an academic prototype in development. Features and endpoints may
+change as the team integrates the system.
+
+## Team Integration
+
+-   **FastAPI (my part):** REST API and data validation
+-   **Kong and Authentik:** Gateway and authentication
+-   **PostgreSQL:** Database
+-   **Physical / IoT:** Simulated vehicle and sensor data
+-   **Observability:** Logs and monitoring
+
+
