@@ -1,23 +1,14 @@
-# Secure-IoT-Gateway: Architecture, Deployment & Troubleshooting Guide
+# Secure IoT Gateway: System Architecture and Installation Guide
 
-## 1. Project Overview & Architecture
+## 1. Gateway Overview & Docker Architecture
 
-The **Secure-IoT-Gateway** is an open-source API gateway system designed to sit between external client devices (such as IoT endpoints) and backend microservices. Built using **Kong Gateway OSS** in **DB-less (declarative) mode**, this system runs in a lightweight Docker environment without requiring an external database like PostgreSQL for gateway routing rules.
+This Secure-IoT-Gateway project is an open-source API gateway project designed to build an open-source and easily deployable API Gateway system for communication between IoT client devices and backend microservices. This iteration is built using open-source tools like **Kong Gateway OSS** in **DB-less** **(declarative)** and **Authentik (Identity Provider)** containerized using Docker.
 
-```
-Secure-IoT-Gateway/
-└── Docker/
-    ├── docker-compose.yml
-    └── kong.yml
+### 2.1 Kong Setup & Declarative Configuration File (`kong.yml`)
 
+This initial file defines the upstream services, routing rules, consumer credentials and gateway policies (API Key authentication through `key-auth` & rate-limiting through `rate-limit`) for **Kong Gateway**. These settings will update later when **Authentik** is setup along with Kong, but that's for later part of this guide:
 
-```
-
-### 2.1 Declarative Configuration (`kong.yml`)
-
-Defines upstream services, public routing rules, consumer credentials, and active gateway policies (`key-auth` and `rate-limiting`):
-
-```
+````
 _format_version: "3.0"
 
 services:
@@ -46,11 +37,11 @@ consumers:
       - key: my-super-secret-iot-key
 
 
-```
+````
 
-### 2.2 Docker Compose Configuration (`docker-compose.yml`)
+### 2.2 Docker Compose Configuration File Setup (`docker-compose.yml`)
 
-Defines the Kong container environment, port mappings, and config file volume bind-mounts:
+These settings define the **Kong Gateway** environment, port mapping and config file locations.
 
 ```
 version: '3.8'
@@ -75,118 +66,114 @@ services:
       - "8001:8001"
       - "8002:8002"
 
+````
+
+## 3. Booting Up Kong Gateway & Testing Request Verification
+
+### Launching / Restarting Kong OSS
+
+To start **Kong OSS** in Docker, proceed with the following steps.
+
+NOTE: For the sake of simplicity, "terminal" in this guide references the terminal tool WITHIN the Docker desktop application.
 
 ```
+# First ensure your terminal is operating inside the directory where your docker-compose.yml file is located
 
-## 3. Operational Workflow & Verification
-
-### Launching / Restarting the Gateway
-
-To start or apply changes made to `kong.yml`:
-
-```
-# Ensure terminal is inside the directory containing docker-compose.yml
-cd "C:\Users\YOUR_DOCKER_LOCATION"
-
-# Start container environment
+# Start the container environment
 docker compose up -d
 
-# Restart container to pick up declarative YAML updates
+# Restart container to pull changes in the declarative kong.yml file if neccesary
 docker compose restart kong
+````
 
+**NOTE: Because Kong OSS is running in DB-less, declarative mode, any changes or updates made in the kong.yml declarative file MUST be initialized by restarting the container.**
 
-```
+### Verifying and Testing Gateway Policies
 
-### Verifying Gateway Security Policies
+#### 1. Testing Unauthenticated Request Verification
 
-#### 1. Unauthenticated Request Verification (Should Fail)
-
-Executing a request without an `apikey` header triggers an immediate 401 response:
-
-```
-curl.exe -i http://localhost:8000/test
-
+Lets test requesting the gateway without an API key in the request header:
 
 ```
+curl.exe -i http/localhost:8000/test
+````
 
-*Expected Output:* `HTTP/1.1 401 Unauthorized` with body `{"message":"No API key found in request"}`.
+**Expected output for the request should read**:
 
-#### 2. Invalid Key Verification (Should Fail)
+	`HTTP/1.1 401 Unauthorized`
 
-Executing a request with an unassigned key is blocked:
+With the body of the request reading:
+
+	`{"Message":"No API key found in the request"}`
+
+#### 2. Testing Request Verification With an Invalid Key
+
+Now lets test requesting the gateway with an invalid or wrong key:
 
 ```
 curl.exe -i -H "apikey: wrong-key" http://localhost:8000/test
 
+````
 
-```
+**Expected output for the request should read:**
 
-*Expected Output:* `HTTP/1.1 401 Unauthorized` with body `{"message":"Invalid authentication credentials"}`.
+	`HTTP/1.1 401 Unauthorized`
 
-#### 3. Authorized Request Verification (Should Succeed)
+With the body of the request reading:
 
-Passing the valid consumer key grants access and returns rate-limit header counters:
+	`{"Message":"Invalid authentication credentials"}`
+	
+#### 3. Testing Request Verification With a Valid Key
 
-```
-curl.exe -i -H "apikey: my-super-secret-iot-key" http://localhost:8000/test
-
-
-```
-
-*Expected Output:* `HTTP/1.1 200 OK` accompanied by headers `X-RateLimit-Limit-Minute: 5` and `X-RateLimit-Remaining-Minute: 4`.
-
-#### 4. Rate Limit Exhaustion Test (Should Block)
-
-Sending more than 5 requests in under a minute exhausts the allocated quota:
+Now lets test requesting the gateway with a valid key:
 
 ```
 curl.exe -i -H "apikey: my-super-secret-iot-key" http://localhost:8000/test
 
+````
+
+**Expected output for the request should read:**
+
+	`HTTP/1.1 200 OK`
+
+With the headers:
 
 ```
+X-RateLimit-Limit-Minute: 5
+````
 
-*Expected Output (6th request):* `HTTP/1.1 429 Too Many Requests` with body `{"message":"API rate limit exceeded"}`.
+And:
 
-## 4. Problem Solving & Troubleshooting Log
+```
+X-RateLimit-Remaining-Minute: 4.
+````
 
-During initial deployment on Windows 11, several environment-specific issues were encountered and resolved.
+The dummy backend should return a veritable wall of text and JSON data. NOTE: As long as the HTTP request returns `HTTP/1.1 200 OK` you can be comfortable the gateway verification is working.
 
-### Issue 1: Bash Syntax Incompatibility in Windows PowerShell
+#### 4. Rate Limit Exhaustion and Lockout
 
-* **Symptom:** Terminal threw parsing errors: `Missing file specification after redirection operator` and `The '<' operator is reserved`.
+Sending more than 5 rapid requests within 5 minutes should cause rate limit exhaustion. Test this by sending 5 valid requests back to back. The return should read:
 
-* **Root Cause:** Bash-specific Heredoc syntax (`cat << 'EOF' > kong.yml`) was executed directly inside Windows PowerShell.
+`HTTP/1.1 429 Too Many Requests`
 
-* **Resolution:** File creation was transitioned directly into VS Code editors or replaced with PowerShell Here-Strings (`@' ... '@ | Set-Content -Encoding utf8 kong.yml`).
+With the body of the request reading:
 
-### Issue 2: Script Wrapper Pollution in YAML Files
+`{"message":"API rate limit exceeded"}`.
 
-* **Symptom:** VS Code displayed YAML syntax errors: `BAD_SCALAR_START`, `MULTILINE_IMPLICIT_KEY`, and `MISSING_CHAR`.
+## 4. Problem Solving Frequent Issues
 
-* **Root Cause:** PowerShell wrapper commands (`@'` and `Set-Content...`) were accidentally pasted directly inside `docker-compose.yml`.
+### Issue 1: Wrong Working Directory (`no config file found`)
 
-* **Resolution:** Replaced file contents with pure, valid YAML formatting without CLI wrappers.
+- **Issue**: `docker compose up` gave `no configuration file found` or `docker compose ps` returned empty headers and zero services.
+- **Resolution**: Navigate to the directory where your `docker-compose.yml` file is located.
 
-### Issue 3: Working Directory Mismatch (`no config file found`)
+#### Issue 2: Visual Studio Code CRLF / LF Error
 
-* **Symptom:** `docker compose up` threw `no configuration file found` or `docker compose ps` displayed empty headers without running services.
+- **Issue**: Container immediately exits under `Exit Code 1` and `docker compose ps` returns no active services.
+- **Resolution**: Open the `kong.yml` and `docker-compose.yml` files in Visual Studio Code and navigate to the lower right corner. Change line ending settings from **CRLF** to **LF**.
+	- Linux based containers cannot parse line endings with (`\r`).
 
-* **Root Cause:** The terminal prompt was operating in the root repository directory rather than the `/Docker` subfolder where `docker-compose.yml` resides.
-
-* **Resolution:** Changed working directory to the target path prior to invoking Docker Compose commands: `cd Docker`.
-
-### Issue 4: Windows Carriage Return Line Endings (`CRLF` vs `LF`)
-
-* **Symptom:** Container exited immediately on startup with `Exit Code 1`. Running `docker compose ps` showed no active port bindings.
-
-* **Root Cause:** Windows text editors default to `CRLF` line endings (`\r\n`). Linux-based containers (such as Kong) fail to parse configuration files containing carriage returns (`\r`).
-
-* **Resolution:** Changed line sequence setting from **CRLF** to **LF** in the bottom-right status bar of Visual Studio Code for both `kong.yml` and `docker-compose.yml`, followed by container restart (`docker compose down && docker compose up -d`).
-
-### Issue 5: PowerShell `curl` Cmdlet Collision
-
-* **Symptom:** Unexpected output format or failed requests when running `curl`.
-
-* **Root Cause:** Windows PowerShell aliases `curl` to its native `Invoke-WebRequest` cmdlet, which behaves differently from real cURL.
-
-* **Resolution:** Appended the `.exe` extension (`curl.exe`) to explicitly target the native binary executable.
+#### Issue 3: Powershell `curl` Command Collision
+- **Issue**: Failed request when running `curl` in Powershell during testing due to Powershell's native web request command.
+- **Resolution**: Always remember to append the `.exe` for the `curl` command.
+ 
